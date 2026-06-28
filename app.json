@@ -4,26 +4,37 @@
     "slug": "lockin",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/lockin-logo.png.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/lockin-logo.png.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#fafaf8"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/lockin-logo.png.png",
+        "backgroundColor": "#fafaf8"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/lockin-logo.png.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "lockin uses photos to attach proof of your completed work.",
+          "cameraPermission": "lockin uses the camera to snap proof of your completed work."
+        }
+      ],
+      "expo-video",
+      "expo-audio"
+    ]
   }
 }
