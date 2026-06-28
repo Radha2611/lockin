@@ -59,11 +59,22 @@ export default function SessionScreen({ route, navigation }) {
   const backgroundAt = useRef(null)
   const elapsedRef   = useRef(0)
   const leftSecsRef  = useRef(0)
+  const musicOnRef   = useRef(false)
 
   const audioPlayer = useAudioPlayer(null)
 
   useEffect(() => { elapsedRef.current  = elapsed  }, [elapsed])
   useEffect(() => { leftSecsRef.current = leftSecs }, [leftSecs])
+
+  const safePause = useCallback(() => {
+    if (!musicOnRef.current) return
+    try {
+      audioPlayer.pause()
+    } catch {
+      // native player may already be released on unmount
+    }
+    musicOnRef.current = false
+  }, [audioPlayer])
 
   useEffect(() => {
     setAudioModeAsync({
@@ -71,16 +82,14 @@ export default function SessionScreen({ route, navigation }) {
       shouldPlayInBackground: false,
       interruptionMode: 'mixWithOthers',
     }).catch(() => {})
-    return () => {
-      audioPlayer.pause()
-    }
-  }, [])
+    return () => safePause()
+  }, [safePause])
 
   const stopMusic = useCallback(() => {
-    audioPlayer.pause()
+    safePause()
     setMusicOn(false)
     setTrackId(null)
-  }, [audioPlayer])
+  }, [safePause])
 
   const startMusic = useCallback((id) => {
     const track = TRACKS[id]
@@ -89,6 +98,7 @@ export default function SessionScreen({ route, navigation }) {
     audioPlayer.loop = true
     audioPlayer.volume = 0.42
     audioPlayer.play()
+    musicOnRef.current = true
     setMusicOn(true)
     setTrackId(id)
   }, [audioPlayer])
@@ -155,7 +165,8 @@ export default function SessionScreen({ route, navigation }) {
         }
         if (elapsedRef.current < totalSeconds) {
           startTicking()
-          setPandaMood('focused')
+          const remaining = totalSeconds - elapsedRef.current
+          setPandaMood(remaining <= 120 ? 'proud' : 'focused')
         }
       }
     })
@@ -163,11 +174,20 @@ export default function SessionScreen({ route, navigation }) {
   }, [startTicking, stopTicking, totalSeconds])
 
   useEffect(() => {
-    if (elapsed > 0 && elapsed % 600 === 0 && elapsed < totalSeconds) {
-      setPandaMood('proud')
-      setTimeout(() => setPandaMood('focused'), 2500)
+    if (timeLeft <= 120 && timeLeft > 0) {
+      setPandaMood(m => (m === 'annoyed' ? m : 'proud'))
     }
-  }, [elapsed, totalSeconds])
+  }, [timeLeft])
+
+  useEffect(() => {
+    if (elapsed > 0 && elapsed % 600 === 0 && elapsed < totalSeconds && timeLeft > 120) {
+      setPandaMood(m => (m === 'annoyed' ? m : 'proud'))
+      const t = setTimeout(() => {
+        setPandaMood(m => (m === 'annoyed' ? m : 'focused'))
+      }, 2500)
+      return () => clearTimeout(t)
+    }
+  }, [elapsed, totalSeconds, timeLeft])
 
   const goToExit = (mood = pandaMood) => {
     stopTicking()
@@ -208,7 +228,6 @@ export default function SessionScreen({ route, navigation }) {
     focused: 'watching you work',
     annoyed: 'you left again.',
     proud:   'great job!!',
-    sleepy:  'zzz…',
   }[pandaMood]
 
   const isNight = bg.isNight

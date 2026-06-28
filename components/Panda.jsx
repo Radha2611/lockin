@@ -3,14 +3,12 @@ import { View, Text, StyleSheet, Animated } from 'react-native'
 import MiruIdle    from '../assets/miru-idle.svg'
 import MiruAnnoyed from '../assets/miru-annoyed.svg'
 import MiruProud   from '../assets/miru-proud.svg'
-import MiruSleepy  from '../assets/miru-sleepy.svg'
 
 const MOOD_SVGS = {
   idle:    MiruIdle,
   focused: MiruIdle,
   annoyed: MiruAnnoyed,
   proud:   MiruProud,
-  sleepy:  MiruSleepy,
 }
 
 const MOOD_LABELS = {
@@ -18,7 +16,6 @@ const MOOD_LABELS = {
   focused: '( ¬ ‿ ¬ )',
   annoyed: '( ಠ ╭╮ ಠ )',
   proud:   '( ≧ ◡ ≦ )',
-  sleepy:  '( ￣ ω ￣ )',
 }
 
 export default function Panda({ mood = 'idle', size = 165 }) {

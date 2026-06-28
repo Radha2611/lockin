@@ -23,7 +23,7 @@ export default function SessionBgVideo({ source, isNight }) {
           {
             backgroundColor: isNight
               ? 'rgba(14, 14, 18, 0.48)'
-              : 'rgba(250, 250, 248, 0.55)',
+              : 'rgba(250, 250, 248, 0.28)',
           },
         ]}
       />
