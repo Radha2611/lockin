@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const USER_KEY = 'lockin_user'
 
-export const DEFAULT_AVATAR = require('../assets/default-avatar.png')
+export const DEFAULT_AVATAR = require('../assets/default-avatar.jpg')
 
 export function getAvatarSource(user) {
   if (user?.photoUri) return { uri: user.photoUri }

@@ -6,26 +6,32 @@ import {
 import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import Panda from '../components/Panda'
+import WeeklyEngagement from '../components/WeeklyEngagement'
 import { getUser, getAvatarSource } from '../storage/user'
+import { getSessions, getWeekEngagement } from '../storage/sessions'
 
-const PRESETS = [15, 25, 40, 60]
+const PRESETS = [5, 10, 15, 25, 40, 60]
 const LOGO = require('../assets/lockin-logo.png.png')
 
 export default function HomeScreen({ navigation }) {
   const [taskName,   setTaskName]   = useState('')
   const [targetMins, setTargetMins] = useState(25)
   const [user,       setUser]       = useState(null)
+  const [weekDays,   setWeekDays]   = useState([])
 
   useFocusEffect(
     useCallback(() => {
       getUser().then(setUser)
+      getSessions().then(sessions => setWeekDays(getWeekEngagement(sessions)))
     }, [])
   )
 
   const canStart = taskName.trim().length > 2
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
+    <View style={styles.root}>
+      <WeeklyEngagement days={weekDays} />
+      <ScrollView style={styles.main} contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.topRow}>
@@ -89,12 +95,14 @@ export default function HomeScreen({ navigation }) {
       <TouchableOpacity style={styles.logLink} onPress={() => navigation.navigate('Log')}>
         <Text style={styles.logLinkText}>view past sessions →</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  root:     { flex: 1, backgroundColor: '#fafaf8' },
+  root:     { flex: 1, flexDirection: 'row', backgroundColor: '#fafaf8' },
+  main:     { flex: 1 },
   inner:    { alignItems: 'center', paddingTop: 56, paddingHorizontal: 28, paddingBottom: 40 },
   topRow:   { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   logoRow:  { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -132,6 +140,7 @@ const styles = StyleSheet.create({
   },
   presets: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 32,
     alignSelf: 'flex-start',

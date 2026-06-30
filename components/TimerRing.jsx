@@ -7,7 +7,7 @@ const STROKE        = 8
 const RADIUS        = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
-export default function TimerRing({ elapsed, total, timeLeft, light = false }) {
+export default function TimerRing({ elapsed, total, timeLeft, light = false, softBackdrop = false }) {
   const progress = total > 0 ? Math.min(elapsed / total, 1) : 0
   const offset   = CIRCUMFERENCE * (1 - progress)
 
@@ -15,13 +15,13 @@ export default function TimerRing({ elapsed, total, timeLeft, light = false }) {
   const secs  = timeLeft % 60
   const label = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 
-  const trackColor   = light ? 'rgba(255,255,255,0.25)' : '#e0e0e0'
+  const trackColor   = light ? 'rgba(255,255,255,0.25)' : '#d0d0d0'
   const progressColor = light ? '#ffffff' : '#1a1a1a'
   const timeColor    = light ? '#ffffff' : '#1a1a1a'
-  const subColor     = light ? 'rgba(255,255,255,0.75)' : '#aaa'
+  const subColor     = light ? 'rgba(255,255,255,0.75)' : (softBackdrop ? '#4a4a4a' : '#888')
 
   return (
-    <View style={[styles.wrap, light && styles.wrapLight]}>
+    <View style={[styles.wrap, light && styles.wrapLight, softBackdrop && styles.wrapSoft]}>
       <Svg width={SIZE} height={SIZE} style={styles.svg}>
         <Circle
           cx={SIZE / 2} cy={SIZE / 2} r={RADIUS}
@@ -57,6 +57,10 @@ const styles = StyleSheet.create({
   },
   wrapLight: {
     backgroundColor: 'rgba(0,0,0,0.18)',
+    borderRadius: SIZE / 2,
+  },
+  wrapSoft: {
+    backgroundColor: 'rgba(255,255,255,0.52)',
     borderRadius: SIZE / 2,
   },
   svg:   { position: 'absolute', top: 0, left: 0 },

@@ -7,23 +7,24 @@ import { useAudioPlayer, setAudioModeAsync } from 'expo-audio'
 import Panda         from '../components/Panda'
 import TimerRing     from '../components/TimerRing'
 import SessionBgVideo from '../components/SessionBgVideo'
+import { useTapSound } from '../utils/useTapSound'
 
 const BACKGROUNDS = [
   {
     id: 'cozy',
-    label: '🛋  cozy',
+    label: 'cozy',
     video: require('../assets/bg-cozy-lockin.mp4'),
     isNight: false,
   },
   {
     id: 'night',
-    label: '🌙 night',
+    label: 'night',
     video: require('../assets/bg-night-lockin.mp4'),
     isNight: true,
   },
   {
     id: 'cutiespace',
-    label: '✨ cutiespace',
+    label: 'cutiespace',
     video: require('../assets/bg-cutie-lockin.mp4'),
     isNight: false,
   },
@@ -59,11 +60,23 @@ export default function SessionScreen({ route, navigation }) {
   const backgroundAt = useRef(null)
   const elapsedRef   = useRef(0)
   const leftSecsRef  = useRef(0)
+  const musicOnRef   = useRef(false)
 
   const audioPlayer = useAudioPlayer(null)
+  const playTap     = useTapSound()
 
   useEffect(() => { elapsedRef.current  = elapsed  }, [elapsed])
   useEffect(() => { leftSecsRef.current = leftSecs }, [leftSecs])
+
+  const safePause = useCallback(() => {
+    if (!musicOnRef.current) return
+    try {
+      audioPlayer.pause()
+    } catch {
+      // native player may already be released on unmount
+    }
+    musicOnRef.current = false
+  }, [audioPlayer])
 
   useEffect(() => {
     setAudioModeAsync({
@@ -71,16 +84,14 @@ export default function SessionScreen({ route, navigation }) {
       shouldPlayInBackground: false,
       interruptionMode: 'mixWithOthers',
     }).catch(() => {})
-    return () => {
-      audioPlayer.pause()
-    }
-  }, [])
+    return () => safePause()
+  }, [safePause])
 
   const stopMusic = useCallback(() => {
-    audioPlayer.pause()
+    safePause()
     setMusicOn(false)
     setTrackId(null)
-  }, [audioPlayer])
+  }, [safePause])
 
   const startMusic = useCallback((id) => {
     const track = TRACKS[id]
@@ -89,18 +100,20 @@ export default function SessionScreen({ route, navigation }) {
     audioPlayer.loop = true
     audioPlayer.volume = 0.42
     audioPlayer.play()
+    musicOnRef.current = true
     setMusicOn(true)
     setTrackId(id)
   }, [audioPlayer])
 
   const handleMusicToggle = () => {
+    playTap()
     if (musicOn) {
       stopMusic()
       return
     }
     Alert.alert('focus music', 'pick a soundtrack for your session', [
-      { text: TRACKS.silent.label, onPress: () => startMusic('silent') },
-      { text: TRACKS.anne.label, onPress: () => startMusic('anne') },
+      { text: TRACKS.silent.label, onPress: () => { playTap(); startMusic('silent') } },
+      { text: TRACKS.anne.label, onPress: () => { playTap(); startMusic('anne') } },
       { text: 'cancel', style: 'cancel' },
     ])
   }
@@ -155,7 +168,8 @@ export default function SessionScreen({ route, navigation }) {
         }
         if (elapsedRef.current < totalSeconds) {
           startTicking()
-          setPandaMood('focused')
+          const remaining = totalSeconds - elapsedRef.current
+          setPandaMood(remaining <= 120 ? 'proud' : 'focused')
         }
       }
     })
@@ -163,11 +177,20 @@ export default function SessionScreen({ route, navigation }) {
   }, [startTicking, stopTicking, totalSeconds])
 
   useEffect(() => {
-    if (elapsed > 0 && elapsed % 600 === 0 && elapsed < totalSeconds) {
-      setPandaMood('proud')
-      setTimeout(() => setPandaMood('focused'), 2500)
+    if (timeLeft <= 120 && timeLeft > 0) {
+      setPandaMood(m => (m === 'annoyed' ? m : 'proud'))
     }
-  }, [elapsed, totalSeconds])
+  }, [timeLeft])
+
+  useEffect(() => {
+    if (elapsed > 0 && elapsed % 600 === 0 && elapsed < totalSeconds && timeLeft > 120) {
+      setPandaMood(m => (m === 'annoyed' ? m : 'proud'))
+      const t = setTimeout(() => {
+        setPandaMood(m => (m === 'annoyed' ? m : 'focused'))
+      }, 2500)
+      return () => clearTimeout(t)
+    }
+  }, [elapsed, totalSeconds, timeLeft])
 
   const goToExit = (mood = pandaMood) => {
     stopTicking()
@@ -187,6 +210,7 @@ export default function SessionScreen({ route, navigation }) {
   }
 
   const handleRequestExit = () => {
+    playTap()
     const pctDone = elapsed / totalSeconds
     if (pctDone < 0.5) {
       setPandaMood('annoyed')
@@ -208,14 +232,16 @@ export default function SessionScreen({ route, navigation }) {
     focused: 'watching you work',
     annoyed: 'you left again.',
     proud:   'great job!!',
-    sleepy:  'zzz…',
   }[pandaMood]
 
   const isNight = bg.isNight
+  const onLightVideo = !isNight
+  const mutedText = onLightVideo ? styles.textMutedLight : styles.textMutedNight
+  const subtleText = onLightVideo ? styles.textSubtleLight : styles.textSubtleNight
 
   return (
     <View style={styles.root}>
-      <SessionBgVideo key={bg.id} source={bg.video} isNight={isNight} />
+      <SessionBgVideo key={bg.id} source={bg.video} isNight={isNight} bgId={bg.id} />
 
       <StatusBar barStyle={isNight ? 'light-content' : 'dark-content'} />
 
@@ -234,16 +260,16 @@ export default function SessionScreen({ route, navigation }) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setBgPickerOpen(o => !o)}
+            onPress={() => { playTap(); setBgPickerOpen(o => !o) }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={[styles.bgBtn, isNight && styles.textLight]}>⊞</Text>
+            <Text style={[styles.bgBtn, isNight ? styles.textLight : styles.bgBtnLight]}>⊞</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {musicOn && trackId && (
-        <Text style={[styles.musicHint, isNight && styles.textLight]} numberOfLines={1}>
+        <Text style={[styles.musicHint, mutedText, onLightVideo && styles.textShadowLight]} numberOfLines={1}>
           ♪ {TRACKS[trackId].label}
         </Text>
       )}
@@ -254,7 +280,7 @@ export default function SessionScreen({ route, navigation }) {
             <TouchableOpacity
               key={b.id}
               style={[styles.bgChip, bg.id === b.id && styles.bgChipActive]}
-              onPress={() => { setBg(b); setBgPickerOpen(false) }}
+              onPress={() => { playTap(); setBg(b); setBgPickerOpen(false) }}
             >
               <Text style={[styles.bgChipText, bg.id === b.id && styles.bgChipTextActive]}>
                 {b.label}
@@ -265,8 +291,12 @@ export default function SessionScreen({ route, navigation }) {
       )}
 
       <View style={styles.pandaWrap}>
-        <Panda mood={pandaMood} size={165} />
-        <Text style={[styles.moodLine, isNight && styles.textLight]}>
+        <Panda
+          mood={pandaMood}
+          size={165}
+          labelColor={onLightVideo ? '#242424' : '#bbb'}
+        />
+        <Text style={[styles.moodLine, mutedText, onLightVideo && styles.textShadowLight]}>
           {moodLine}
         </Text>
       </View>
@@ -284,6 +314,7 @@ export default function SessionScreen({ route, navigation }) {
         total={totalSeconds}
         timeLeft={Math.max(timeLeft, 0)}
         light={isNight}
+        softBackdrop={onLightVideo}
       />
 
       <TouchableOpacity style={[styles.exitBtn, isNight && styles.exitBtnLight]} onPress={handleRequestExit}>
@@ -292,7 +323,7 @@ export default function SessionScreen({ route, navigation }) {
         </Text>
       </TouchableOpacity>
 
-      <Text style={[styles.hint, isNight && styles.textLight]}>
+      <Text style={[styles.hint, subtleText, onLightVideo && styles.textShadowLight]}>
         {elapsed < 60 ? 'just getting started' : `${Math.round(elapsed / 60)} min in`}
       </Text>
     </View>
@@ -351,9 +382,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#aaa',
   },
+  bgBtnLight: {
+    color: '#3d3d3d',
+  },
   musicHint: {
     fontSize: 10,
-    color: '#aaa',
     marginBottom: 6,
     letterSpacing: 0.3,
     zIndex: 1,
@@ -387,7 +420,6 @@ const styles = StyleSheet.create({
   },
   moodLine: {
     fontSize: 12,
-    color: '#aaa',
     marginTop: 8,
     letterSpacing: 1,
     textTransform: 'lowercase',
@@ -430,9 +462,17 @@ const styles = StyleSheet.create({
   hint: {
     marginTop: 16,
     fontSize: 11,
-    color: '#bbb',
     letterSpacing: 0.5,
     zIndex: 1,
   },
   textLight: { color: '#f0f0f0' },
+  textMutedLight: { color: '#242424' },
+  textMutedNight: { color: '#f0f0f0' },
+  textSubtleLight: { color: '#333333' },
+  textSubtleNight: { color: '#bbb' },
+  textShadowLight: {
+    textShadowColor: 'rgba(255,255,255,0.92)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
+  },
 })

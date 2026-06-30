@@ -16,11 +16,16 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.radha2611.lockin",
       "adaptiveIcon": {
         "foregroundImage": "./assets/lockin-logo.png.png",
         "backgroundColor": "#fafaf8"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/lockin-logo.png.png"
@@ -34,7 +39,13 @@
         }
       ],
       "expo-video",
-      "expo-audio"
-    ]
+      "expo-audio",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "08217f52-3f1a-41f6-96c3-16c8d9cd4da3"
+      }
+    }
   }
 }
