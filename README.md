@@ -38,18 +38,20 @@ Everything is stored on-device via `AsyncStorage` — no backend, auth, or cloud
 ---
 
 **Tech Stack:**
-Category       Technology
-Framework      React Native + Expo SDK 54
-Navigation     React Navigation 
-Local storage  AsyncStorage 
-Background video expo-video
-Audio          expo-audio
-Image picker   expo-image-picker
-SVG rendering  react-native-svg + react-native-svg-transformer
-Animation      React Native Animated API
-App state detection React Native AppState 
-UI design      Figma
-Logo design    Canva
+| **Category**            | **Technology / Framework**                      |
+| ----------------------- | ----------------------------------------------- |
+| **Frontend Framework**  | React Native + Expo SDK 54                      |
+| **Navigation**          | React Navigation                                |
+| **Local Storage**       | AsyncStorage                                    |
+| **Background Video**    | expo-video                                      |
+| **Audio**               | expo-audio                                      |
+| **Image Picker**        | expo-image-picker                               |
+| **SVG Rendering**       | react-native-svg + react-native-svg-transformer |
+| **Animation**           | React Native Animated API                       |
+| **App State Detection** | React Native AppState                           |
+| **UI Design**           | Figma                                           |
+| **Logo Design**         | Canva                                           |
+
 
 ## How It Works
 1. **Create a session** — enter a task, select a focus duration
