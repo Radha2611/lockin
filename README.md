@@ -5,8 +5,8 @@ A local-first focus session app built with **React Native + Expo**. Set a task, 
 ---
 
 Overview
-**lockin** is a distraction-aware productivity app designed to help users stay focused. It runs entirely on-device with **no backend or authentication**. During each session, Miru monitors your focus behavior and reacts whenever you leave the app.
----
+_**lockin** is a distraction-aware productivity app designed to help users stay focused. It runs entirely on-device with no backend or authentication. During each session, Miru monitors your focus behavior and reacts whenever you leave the app._
+
 
 **Features**
 
@@ -37,7 +37,7 @@ Everything is stored on-device via `AsyncStorage` — no backend, auth, or cloud
 - profile · session history · reflections · photos · leave count · away time · mood history · daily activity
 ---
 
-Tech Stack:
+**Tech Stack:**
 Category       Technology
 Framework      React Native + Expo SDK 54
 Navigation     React Navigation 
@@ -50,7 +50,6 @@ Animation      React Native Animated API
 App state detection React Native AppState 
 UI design      Figma
 Logo design    Canva
----
 
 ## How It Works
 1. **Create a session** — enter a task, select a focus duration
